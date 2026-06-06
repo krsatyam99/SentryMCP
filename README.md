@@ -41,7 +41,7 @@ curl -X POST http://localhost:8000/analyze \
   -d "{\"industry\": \"fintech\", \"query\": \"Check account ACC-991A for possible fraud\"}"
 ```
 
-For full setup, Bedrock mode, Streamlit UI, and environment variables, see [Local Setup](#local-setup) and [Running the Application](#running-the-application). For architecture details, see [`docs/architecture.md`](docs/architecture.md).
+For full setup, Bedrock mode, and environment variables, see [Local Setup](#local-setup) and [Running the Application](#running-the-application). For architecture details, see [`docs/architecture.md`](docs/architecture.md).
 
 ---
 
@@ -68,7 +68,7 @@ For full setup, Bedrock mode, Streamlit UI, and environment variables, see [Loca
 
 This project is a **proof of concept** for a pluggable, cross-industry compliance agent. An operator submits a question such as *"Check account ACC-991A for possible fraud"* or *"Summarize leave policy for an employee."* The system:
 
-1. **Accepts** the request via HTTP (REST API, built-in web UI, or optional Streamlit UI).
+1. **Accepts** the request via HTTP (REST API or built-in web UI at `GET /`).
 2. **Optionally transcribes** audio input from an S3 URL using Amazon Transcribe.
 3. **Routes** the request to the correct domain MCP server based on the selected industry.
 4. **Fetches** mock subsystem data (ledger records, patient records, HR policies) through MCP tools.
@@ -94,10 +94,9 @@ The project is designed to be **demo-friendly**: it works fully offline with `LL
 ```text
 ┌──────────────────────────────────────────────────────────────────────────┐
 │  CLIENT LAYER                                                             │
-│  • Built-in web UI     →  GET /  (static/index.html)                     │
+│  • Built-in web UI     →  GET /  (src/agentai/static/index.html)         │
 │  • Text chat           →  POST /analyze                                   │
 │  • Voice interaction   →  POST /voice-analyze                             │
-│  • Streamlit UI        →  app_ui.py (calls API via httpx)               │
 │  • API consumers       →  curl, Postman, FastAPI /docs                    │
 └────────────────────────────────────┬─────────────────────────────────────┘
                                      │
@@ -143,7 +142,29 @@ The project is designed to be **demo-friendly**: it works fully offline with `LL
 | Endpoint | `force_vocalization` | Polly TTS | Typical Use |
 |----------|---------------------|-----------|-------------|
 | `POST /analyze` | `false` | Skipped | Fast text chat |
-| `POST /voice-analyze` | `true` | Enabled when `POLLY_ENABLED=true` | Mic / voice-to-voice |
+| `POST /voice-analyze` | `true` | Amazon Polly (when `POLLY_ENABLED=true`) | Mic / voice-to-voice |
+
+### Voice-to-Voice Pipeline (Recognition + Polly)
+
+Default voice-to-voice mode — **no S3 bucket required**:
+
+```text
+You speak
+    → Browser Speech Recognition (Chrome/Edge)
+    → POST /voice-analyze { query: "transcribed text" }
+    → MCP + Bedrock analysis
+    → Amazon Polly synthesizes verdict (POLLY_ENABLED=true)
+    → Browser plays Polly MP3 audio
+```
+
+Enable Polly in `.env`:
+
+```env
+POLLY_ENABLED=true
+POLLY_VOICE_ID=Joanna
+```
+
+Verify at `GET /audio-config` — expect `"voice_mode": "recognition_polly"`.
 
 ---
 
@@ -157,7 +178,7 @@ This project follows **Clean Architecture** (also called **Hexagonal Architectur
                     ┌─────────────────────────────────┐
                     │         INBOUND ADAPTERS         │
                     │   FastAPI routes (app.py)        │
-                    │   static/index.html, app_ui.py   │
+                    │   static/index.html              │
                     └───────────────┬─────────────────┘
                                     │ calls
                     ┌───────────────▼─────────────────┐
@@ -229,7 +250,6 @@ mcp/
 │       ├── adapters/           # Infrastructure (inbound API + outbound integrations)
 │       └── static/             # Built-in web UI assets
 ├── tests/                      # Unit tests
-├── app_ui.py                   # Optional Streamlit multimodal UI (root-level)
 ├── setup.py                    # Package metadata and install config
 ├── requirements.txt            # Pip dependencies
 ├── pytest.ini                  # Test runner configuration
@@ -248,7 +268,6 @@ mcp/
 | `setup.py` | Setuptools config — package name, version, `find_packages(where="src")`, `install_requires` |
 | `requirements.txt` | Pinned runtime and dev dependencies for `pip install` |
 | `pytest.ini` | Sets `pythonpath = src` so tests can import `agentai` without installing |
-| `app_ui.py` | **Streamlit UI** — chat + browser audio recorder; calls `/analyze` and `/voice-analyze` via httpx. Requires `streamlit` and `audiorecorder` (not in `requirements.txt`) |
 | `.env` | Local environment variables (AWS keys, LLM provider, Polly settings). Loaded automatically via `python-dotenv` |
 | `.gitignore` | Excludes `.venv`, `.env`, caches, build artifacts |
 
@@ -407,7 +426,20 @@ Each industry is a **self-contained MCP plugin**: its own server process, tool, 
 }
 ```
 
-`audio_url` is optional. When provided, Amazon Transcribe transcribes the S3 object and appends the transcript to the LLM prompt.
+Voice input with uploaded microphone audio:
+
+```json
+{
+  "industry": "fintech",
+  "query": "",
+  "audio_base64": "<base64-encoded webm or wav>",
+  "audio_media_format": "webm"
+}
+```
+
+- `audio_url` — existing S3 file; Transcribe reads it directly.
+- `audio_base64` — raw mic audio; server uploads to S3 then transcribes.
+- Either field can supply the spoken query; `query` is optional when transcription succeeds.
 
 ### Response Body
 
@@ -505,18 +537,14 @@ export BEDROCK_LOCAL_FALLBACK=true
 
 The adapter tries Bedrock first. On failure, it falls back to **OpenRouter** free models, then local heuristics if `BEDROCK_LOCAL_FALLBACK=true`.
 
-### Option 3: Built-In Web UI
+### Option 3: Built-In Web UI (Primary Frontend)
 
-Start the API (Option 1 or 2), then open http://localhost:8000/. Select an industry, type a query or use the microphone button.
+Start the API (Option 1 or 2), then open http://localhost:8000/. This serves `src/agentai/static/index.html` — the main UI for text chat and voice-to-voice (browser speech recognition + Amazon Polly).
 
-### Option 4: Streamlit UI (Optional)
+- **Text:** type a query and submit
+- **Voice:** click **Start Voice Loop**, speak your audit request, hear the Polly response
 
-```bash
-pip install streamlit audiorecorder
-streamlit run app_ui.py
-```
-
-Requires the API running at `API_BASE_URL` (default `http://127.0.0.1:8000`).
+Use Chrome or Edge for voice input.
 
 ### Sample API Request
 
@@ -538,12 +566,13 @@ curl -X POST http://localhost:8000/analyze \
 | `BEDROCK_MAX_TOKENS` | `1000` | Max tokens for Bedrock response |
 | `BEDROCK_LOCAL_FALLBACK` | `false` | Use local heuristics after cloud failures |
 | `OPENROUTER_API_KEY` | — | OpenRouter API key for free-model fallback |
-| `TRANSCRIBE_ROLE_ARN` | — | IAM role ARN for Transcribe S3 access |
+| `AUDIO_S3_BUCKET` | — | S3 bucket for uploaded microphone audio (required for AWS voice input) |
+| `AUDIO_S3_PREFIX` | `agentai/uploads` | S3 key prefix for uploaded audio files |
+| `TRANSCRIBE_ROLE_ARN` | — | IAM role ARN Transcribe uses to read audio from S3 |
 | `TRANSCRIBE_LANGUAGE_CODE` | `en-US` | Transcription language |
-| `POLLY_ENABLED` | `false` | Enable Amazon Polly speech synthesis |
+| `POLLY_ENABLED` | `false` | Enable Amazon Polly speech synthesis on `/voice-analyze` |
 | `POLLY_VOICE_ID` | `Joanna` | Polly voice |
 | `POLLY_OUTPUT_FORMAT` | `mp3` | Polly audio format |
-| `API_BASE_URL` | `http://127.0.0.1:8000` | API URL for Streamlit UI (`app_ui.py`) |
 
 ### Example `.env`
 
@@ -554,12 +583,27 @@ BEDROCK_MODEL_ID=amazon.nova-micro-v1:0
 BEDROCK_MAX_TOKENS=120
 BEDROCK_LOCAL_FALLBACK=true
 OPENROUTER_API_KEY=your-key-here
-TRANSCRIBE_ROLE_ARN=arn:aws:iam::123456789012:role/TranscribeAccessRole
+AUDIO_S3_BUCKET=your-audio-bucket-name
+AUDIO_S3_PREFIX=agentai/uploads
+TRANSCRIBE_ROLE_ARN=arn:aws:iam::123456789012:role/TranscribeDataAccessRole
 TRANSCRIBE_LANGUAGE_CODE=en-US
-POLLY_ENABLED=false
+POLLY_ENABLED=true
 POLLY_VOICE_ID=Joanna
 POLLY_OUTPUT_FORMAT=mp3
 ```
+
+Copy `.env.example` to `.env` and fill in your values.
+
+### AWS IAM for Voice (Transcribe + S3 + Polly)
+
+1. **S3 bucket** — create a bucket and set `AUDIO_S3_BUCKET`.
+2. **App IAM user/role** — needs `s3:PutObject` on `arn:aws:s3:::your-bucket/agentai/uploads/*`.
+3. **Transcribe IAM role** — set `TRANSCRIBE_ROLE_ARN` to a role that:
+   - Trusts `transcribe.amazonaws.com`
+   - Has `s3:GetObject` on the same bucket/prefix
+4. **Polly** — set `POLLY_ENABLED=true`; your app credentials need `polly:SynthesizeSpeech`.
+
+After restart, verify: `GET http://localhost:8000/audio-config` should show `"transcribe_enabled": true` and `"polly_enabled": true`.
 
 ---
 
@@ -577,13 +621,6 @@ POLLY_OUTPUT_FORMAT=mp3
 | **python-dotenv** | Loads `.env` configuration files |
 | **pytest** | Unit test runner |
 | **pytest-asyncio** | Async test support (MCP client uses asyncio) |
-
-**Optional (not in `requirements.txt`):**
-
-| Package | Used By |
-|---------|---------|
-| `streamlit` | `app_ui.py` |
-| `audiorecorder` | `app_ui.py` — browser audio recording widget |
 
 ---
 
@@ -609,7 +646,7 @@ The test suite uses **fake port implementations** to verify the use case orchest
 - Clean architecture with swappable adapters
 - Local demo mode (no cloud dependency)
 - Text and voice interaction paths
-- Built-in web UI and optional Streamlit UI
+- Built-in web UI (`index.html`) for text and voice interaction
 
 **Out of scope (intentionally):**
 
