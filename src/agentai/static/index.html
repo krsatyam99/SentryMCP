@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Multimodal MCP Auditor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom subtle scrollbar for a polished corporate feel */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex flex-col antialiased">
+
+    <header class="bg-white border-b border-slate-200/80 px-8 py-4 flex items-center justify-between shadow-sm" role="banner">
+        <div class="flex items-center space-x-4">
+            <div class="bg-teal-50 text-teal-600 p-2.5 rounded-xl border border-teal-100 flex items-center justify-center shadow-sm">
+                <i class="fas fa-waveform-lines text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-semibold tracking-tight text-slate-900">MCP Compliance Workspace</h1>
+                <p class="text-xs text-slate-500 font-medium">Multimodal Engine • Hands-Free Accessible Fallback Loop</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200/60">
+            <label for="industrySelect" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-2">Active MCP Gateway:</label>
+            <select id="industrySelect" class="border-0 rounded-lg px-3 py-1.5 text-xs font-semibold bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-teal-500 focus:outline-none cursor-pointer transition-all">
+                <option value="fintech">💳 FinTech Subsystem</option>
+                <option value="healthcare">🩺 Healthcare / PHI Portal</option>
+                <option value="hr">⚖️ HR Corporate Policy Ledger</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+        
+        <aside class="w-80 bg-white border-r border-slate-200/80 p-6 flex flex-col justify-between hidden md:flex" role="complementary">
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Hands-Free Operation</h3>
+                    <button id="recordBtn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl shadow-sm transition-all duration-200 transform active:scale-[0.98] flex items-center justify-center space-x-2.5 group" aria-label="Start Voice Audit Session">
+                        <i id="recordIcon" class="fas fa-microphone text-sm text-teal-400 transition-transform group-hover:scale-105"></i>
+                        <span id="recordText" class="text-sm">Initiate Voice Query</span>
+                    </button>
+                    <div id="recordingStatus" class="text-center text-xs text-teal-600 font-semibold mt-3 hidden animate-pulse bg-teal-50 border border-teal-100 py-2 rounded-xl">
+                        ✨ Listening to audio stream... Speak now
+                    </div>
+                </div>
+
+                <div class="border border-slate-100 bg-slate-50/50 rounded-xl p-4 space-y-2.5">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Output Parameters</h4>
+                    <div class="flex items-center space-x-2 text-xs text-slate-600">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                        </span>
+                        <span>Auto-Playback Intercept: <strong class="text-teal-600 font-semibold">ARMED</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200/40 rounded-xl p-4">
+                <h4 class="text-xs font-semibold text-slate-700 mb-1">Accessibility Optimization</h4>
+                <p class="text-xs text-slate-500 leading-relaxed">This workspace auto-vocalizes replies immediately via AWS Polly when the microphone tool is used, allowing visually impaired operators to audit records without manual panel navigation.</p>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col bg-slate-50/50" role="main">
+            <div id="chatFeed" class="flex-1 overflow-y-auto p-8 space-y-6" aria-live="polite">
+                <div class="flex items-start space-x-4 max-w-3xl">
+                    <div class="bg-teal-600 text-white p-2 rounded-xl shadow-sm flex items-center justify-center text-xs"><i class="fas fa-robot"></i></div>
+                    <div class="bg-white border border-slate-200/60 rounded-2xl px-5 py-3.5 text-sm text-slate-600 shadow-sm leading-relaxed">
+                        Multimodal interface operational. Select your target domain parameter, submit a transaction identifier text request, or trigger the microphone. Voice loop queries are read out loud automatically.
+                    </div>
+                </div>
+            </div>
+
+            <footer class="bg-white border-t border-slate-200/80 p-5 shadow-sm">
+                <div id="statusBanner" class="max-w-4xl mx-auto mb-3 rounded-xl px-4 py-2.5 text-xs font-medium text-teal-700 bg-teal-50 border border-teal-100 hidden tracking-wide animate-pulse"></div>
+                
+                <form id="chatForm" class="max-w-4xl mx-auto flex items-center space-x-3">
+                    <input type="text" id="userInput" placeholder="Query data parameters dynamically (e.g., 'Audit ACC-991A' or 'Verify PAT-204B')..." class="flex-1 bg-slate-50 border border-slate-200 focus:border-slate-300 focus:bg-white text-slate-800 outline-none rounded-xl px-4 py-3 text-sm transition placeholder-slate-400 font-normal">
+                    <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-3 rounded-xl font-medium shadow-sm transition transform active:scale-95 flex items-center justify-center" aria-label="Send Query">
+                        <i class="fas fa-paper-plane text-xs text-slate-300"></i>
+                    </button>
+                </form>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        const chatFeed = document.getElementById('chatFeed');
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const industrySelect = document.getElementById('industrySelect');
+        const recordBtn = document.getElementById('recordBtn');
+        const recordIcon = document.getElementById('recordIcon');
+        const recordText = document.getElementById('recordText');
+        const recordingStatus = document.getElementById('recordingStatus');
+        const statusBanner = document.getElementById('statusBanner');
+
+        let isRecording = false;
+        let recognition;
+
+        // Core Hook: Intercepts Base64 audio data and plays aloud instantly (Hands-free)
+        function autoPlayAudio(base64Data) {
+            if (!base64Data) return;
+            try {
+                const audioBlob = b64ToBlob(base64Data, 'audio/mp3');
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audioPlayer = new Audio(audioUrl);
+                
+                setStatus('🔊 Playing response aloud...');
+                audioPlayer.play();
+                audioPlayer.onended = () => setStatus('');
+            } catch (err) {
+                console.error("Audio AutoPlay intercept failed:", err);
+            }
+        }
+
+        // Base64 helper array-buffer parsing converter
+        function b64ToBlob(b64Data, contentType='', sliceSize=512) {
+            const byteCharacters = atob(b64Data);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                const slice = byteCharacters.slice(offset, offset + sliceSize);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
+                byteArrays.push(new Uint8Array(byteNumbers));
+            }
+            return new Blob(byteArrays, {type: contentType});
+        }
+
+        const setStatus = (text) => {
+            if (!text) {
+                statusBanner.classList.add('hidden');
+                statusBanner.innerText = '';
+                return;
+            }
+            statusBanner.innerText = text;
+            statusBanner.classList.remove('hidden');
+        };
+
+        function appendMessage(sender, text, audioBase64 = null) {
+            const isAI = sender === 'assistant';
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex items-start space-x-4 max-w-3xl ${isAI ? '' : 'ml-auto flex-row-reverse space-x-reverse'}`;
+            
+            let audioHTML = '';
+            if (audioBase64) {
+                // Keeps a visual native media player node inside timeline layout for debugging fallback
+                audioHTML = `<audio class="mt-3 h-8 w-full max-w-xs block" controls src="data:audio/mp3;base64,${audioBase64}"></audio>`;
+            }
+
+            wrapper.innerHTML = `
+                <div class="${isAI ? 'bg-teal-600' : 'bg-slate-700'} text-white p-2 rounded-xl text-xs shadow-sm flex items-center justify-center"><i class="fas ${isAI ? 'fa-robot' : 'fa-user'}"></i></div>
+                <div class="${isAI ? 'bg-white border border-slate-200/80 text-slate-700' : 'bg-slate-800 text-white'} rounded-2xl px-5 py-3.5 shadow-sm text-sm leading-relaxed">
+                    ${text}
+                    ${audioHTML}
+                </div>
+            `;
+            chatFeed.appendChild(wrapper);
+            chatFeed.scrollTop = chatFeed.scrollHeight;
+            
+            // Problem 2 Fix: If audio payload string exists, immediately vocalize hands-free
+            if (isAI && audioBase64) {
+                autoPlayAudio(audioBase64);
+            }
+        }
+
+        // Central orchestration dispatcher pipeline for hitting FastAPI backend routes
+        async function runAnalysisPipeline(endpoint, queryStr) {
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ industry: industrySelect.value, query: queryStr, audio_url: '' })
+                });
+                const payload = await response.json();
+                
+                // Unpack compliance analytical tokens
+                const evalData = payload.bedrock_evaluation || {};
+                const replyText = `<strong>[VERDICT: ${evalData.verdict || 'UNKNOWN'}]</strong> ${evalData.summary || 'No audit summary generated.'}`;
+                
+                appendMessage('assistant', replyText, payload.speech_audio_base64 || null);
+            } catch (err) {
+                appendMessage('assistant', '⚠️ System runtime processing error communicating with MCP gateway.');
+            } finally {
+                setStatus('');
+            }
+        }
+
+        // Form Submit Handler (Keyboard Text Track Option)
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            userInput.value = '';
+            appendMessage('user', text);
+            setStatus('Extracting data metrics via target MCP server...');
+            
+            // Calls the rapid text-only processing route (Bypasses Polly calculation)
+            await runAnalysisPipeline('/analyze', text);
+        });
+
+        // Browser Web Speech Ingestion Configuration (Captures true dynamic spoken sentences)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                recordingStatus.classList.remove('hidden');
+                recordBtn.className = "w-full bg-teal-50 border border-teal-200 text-teal-700 font-medium py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center space-x-2.5";
+                recordText.innerText = "System Listening...";
+            };
+
+            recognition.onerror = () => {
+                setStatus('⚠️ Voice access framework timeout.');
+                stopRecordingUI();
+            };
+
+            recognition.onend = () => stopRecordingUI();
+
+            recognition.onresult = async (event) => {
+                const liveTranscribedText = event.results.transcript;
+                if (!liveTranscribedText.trim()) return;
+
+                // Outputs exactly what the user said right to the screen
+                appendMessage('user', `🗣️ ${liveTranscribedText}`);
+                setStatus('Routing real-time voice input to execution loop...');
+                
+                // Problem 1 Fix: Calls the audio voice route to explicitly trigger AWS Polly playback 
+                await runAnalysisPipeline('/voice-analyze', liveTranscribedText);
+            };
+        } else {
+            recordBtn.disabled = true;
+            recordText.innerText = "Speech input unsupported";
+        }
+
+        function stopRecordingUI() {
+            isRecording = false;
+            recordingStatus.classList.add('hidden');
+            recordBtn.className = "w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center space-x-2.5 group";
+            recordText.innerText = "Initiate Voice Query";
+        }
+
+        recordBtn.addEventListener('click', () => {
+            if (!isRecording) {
+                isRecording = true;
+                recognition.start();
+            } else {
+                recognition.stop();
+            }
+        });
+    </script>
+</body>
+</html>

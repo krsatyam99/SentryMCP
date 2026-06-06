@@ -1,0 +1,11 @@
+{
+  "status": "COMPLETED",
+  "evaluated_industry": "fintech",
+  "original_query": "Check account ACC-991A for possible fraud",
+  "subsystem_extracted_logs": "Account Holder: Global Logistics Corp\nRisk Profile: HIGH\nCompliance Status: UNDER_REVIEW\nFlagged Transactions found: 1",
+  "bedrock_evaluation": {
+    "verdict": "FLAGGED",
+    "confidence_score": 0.92,
+    "summary": "Bedrock quota was exceeded and GROQ API key is missing, so local fallback handled the analysis. Retrieved domain data contains compliance-sensitive risk signals requiring review."
+  }
+}
