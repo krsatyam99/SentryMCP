@@ -41,7 +41,15 @@ curl -X POST http://localhost:8000/analyze \
   -d "{\"industry\": \"fintech\", \"query\": \"Check account ACC-991A for possible fraud\"}"
 ```
 
-For full setup, Bedrock mode, and environment variables, see [Local Setup](#local-setup) and [Running the Application](#running-the-application). For architecture details, see [`docs/architecture.md`](docs/architecture.md).
+For full setup, Bedrock mode, and environment variables, see [Local Setup](#local-setup) and [Running the Application](#running-the-application).
+
+**More documentation:**
+
+| Document | Purpose |
+|----------|---------|
+| [`docs/project-guide.md`](docs/project-guide.md) | Business context, HLD/LLD, MCP plug-in guide, assignment framing |
+| [`docs/architecture.md`](docs/architecture.md) | Layer diagram and design rationale |
+| [`docs/linkedin-demo-script.md`](docs/linkedin-demo-script.md) | 90-second LinkedIn demo script |
 
 ---
 
@@ -329,7 +337,9 @@ This is the **heart of the application**. It contains no FastAPI, boto3, or MCP 
 
 | File | Purpose |
 |------|---------|
-| `architecture.md` | Short architecture overview — runtime flow, layer list, MVP scope notes |
+| `project-guide.md` | Full project guide — business problem, HLD/LLD, MCP plug-in, assignment framing |
+| `architecture.md` | Layer diagram and design rationale (LLD supplement) |
+| `linkedin-demo-script.md` | 90-second LinkedIn video script and demo checklist |
 
 ---
 

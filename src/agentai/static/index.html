@@ -107,8 +107,18 @@
         let isProcessingVoice = false;
         let recognition;
         let pollyEnabled = false;
+        let conversationHistory = [];
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        function rememberTurn(role, content) {
+            const plain = stripHtml(content);
+            if (!plain) return;
+            conversationHistory.push({ role, content: plain });
+            if (conversationHistory.length > 12) {
+                conversationHistory = conversationHistory.slice(-12);
+            }
+        }
 
         function setStatus(text) {
             if (!text) {
@@ -212,7 +222,7 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        async function runAnalysisPipeline(endpoint, body) {
+        async function runAnalysisPipeline(endpoint, body, userQueryForHistory = '') {
             try {
                 const response = await fetch(endpoint, {
                     method: 'POST',
@@ -231,11 +241,17 @@
                        </details>`
                     : '';
                 const replyText = `<strong>[VERDICT: ${escapeHtml(verdict)}]</strong><div class="mt-2 whitespace-pre-wrap">${escapeHtml(summary)}</div>${providerNote}${mcpData}`;
+                const spokenPlain = payload.spoken_summary || `Verdict: ${verdict}. ${summary}`;
 
                 if (payload.speech_error) {
                     setStatus(`Polly warning: ${payload.speech_error}`);
                 }
-                appendMessage('assistant', replyText, payload.speech_audio_base64 || null, payload.spoken_summary || `Verdict: ${verdict}. ${summary}`);
+                appendMessage('assistant', replyText, payload.speech_audio_base64 || null, spokenPlain);
+
+                if (userQueryForHistory) {
+                    rememberTurn('user', userQueryForHistory);
+                    rememberTurn('assistant', spokenPlain);
+                }
             } catch (err) {
                 appendMessage('assistant', 'System runtime processing error communicating with MCP gateway.', null, 'System runtime processing error communicating with MCP gateway.');
             } finally {
@@ -247,8 +263,9 @@
             await runAnalysisPipeline(endpoint, {
                 industry: industrySelect.value,
                 query: queryStr,
-                audio_url: ''
-            });
+                audio_url: '',
+                conversation_history: conversationHistory.slice()
+            }, queryStr);
         }
 
         chatForm.addEventListener('submit', async (event) => {
@@ -279,6 +296,12 @@
         }
 
         loadAudioConfig();
+
+        industrySelect.addEventListener('change', () => {
+            conversationHistory = [];
+            setStatus('Industry changed. Conversation context reset.');
+            window.setTimeout(() => setStatus(''), 2500);
+        });
 
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();

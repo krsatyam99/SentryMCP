@@ -5,6 +5,10 @@ from agentai.core.entities.audit_request import AuditRequest
 from agentai.core.ports.audio_port import IAudioPort
 from agentai.core.ports.mcp_port import IMcpClientPort
 from agentai.core.ports.llm_port import ILlmPort
+from agentai.core.use_cases.conversation_context import (
+    format_conversation_for_llm,
+    format_conversation_for_mcp,
+)
 
 _TRANSCRIPTION_ERROR_MARKERS = (
     "Transcription requires",
@@ -41,6 +45,7 @@ class AnalyzeVoiceUseCase:
         print(f"[Core UseCase] Executing compliance loop for tracking: {request.industry}")
 
         should_speak = force_vocalization if force_vocalization is not None else self.synthesize_audio
+        history = request.conversation_history or []
 
         audio_transcription = ""
         if self.audio_client is not None:
@@ -84,13 +89,16 @@ class AnalyzeVoiceUseCase:
                 },
             }
 
+        mcp_query = format_conversation_for_mcp(prompt_query, history)
+        llm_query = format_conversation_for_llm(prompt_query, history)
+
         raw_mcp_data = self.mcp_client.execute_compliance_audit(
             industry=request.industry,
-            query=prompt_query,
+            query=mcp_query,
         )
 
         ai_analysis = self.llm_client.generate_agent_reasoning(
-            user_query=prompt_query,
+            user_query=llm_query,
             available_mcp_data=raw_mcp_data,
         )
 

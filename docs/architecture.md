@@ -1,6 +1,6 @@
 # Architecture Overview
 
-This document describes the **low-level design (LLD)** of the MCP Compliance Agent MVP. For setup, API reference, and file-by-file documentation, see the [README](../README.md).
+This document describes the **low-level design (LLD)** of the MCP Compliance Agent MVP. For the full business and extension guide, see [project-guide.md](./project-guide.md). For setup and API reference, see the [README](../README.md).
 
 ---
 
