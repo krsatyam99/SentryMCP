@@ -1,6 +1,7 @@
 # SentryMCP
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.110-green)
 ![AWS](https://img.shields.io/badge/AWS-Bedrock%20%7C%20Polly-orange)
 ![MCP](https://img.shields.io/badge/Protocol-MCP-purple)
@@ -24,6 +25,7 @@
 - [What](#what)
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
+- [Quick Start with Docker](#quick-start-with-docker)
 - [Setup & Installation](#setup--installation)
   - [1. Clone the repo](#1-clone-the-repo)
   - [2. Create virtual environment](#2-create-virtual-environment)
@@ -98,6 +100,68 @@ Make sure you have the following installed before starting:
 | AWS CLI *(optional, Bedrock mode only)* | v2+ | `aws --version` |
 
 > **No AWS account?** Run in [Local mode](#local-mode-no-aws) — no cloud setup needed.
+
+---
+
+## Quick Start with Docker
+
+The fastest way to run SentryMCP — no Python setup needed.
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+### Local mode (no AWS)
+
+```bash
+# 1. Clone
+git clone https://github.com/krsatyam99/SentryMCP.git
+cd SentryMCP
+
+# 2. Copy env file (defaults to local mode — no AWS needed)
+cp .env.example .env        # macOS/Linux
+copy .env.example .env      # Windows
+
+# 3. Build and run
+docker compose up --build
+```
+
+Open **http://localhost:8000/** — done. ✅
+
+### Bedrock + Polly mode (AWS)
+
+```bash
+# Edit .env first
+LLM_PROVIDER=bedrock
+POLLY_ENABLED=true
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+
+# Then run
+docker compose up --build
+```
+
+### Dev mode (hot reload)
+
+```bash
+docker compose --profile dev up sentrymcp-dev
+```
+
+Server runs on **http://localhost:8001/** and reloads on code changes.
+
+### Useful Docker commands
+
+```bash
+# Run in background
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop
+docker compose down
+
+# Rebuild after dependency changes
+docker compose up --build
+```
 
 ---
 
@@ -300,6 +364,9 @@ SentryMCP/
 │   └── static/               # Web UI (index.html)
 ├── docs/                     # Technical guide (DOCX) + diagrams
 ├── tests/
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
 ├── .env.example
 ├── requirements.txt
 └── setup.py
