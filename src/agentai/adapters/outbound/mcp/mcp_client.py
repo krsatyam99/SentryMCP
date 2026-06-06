@@ -2,10 +2,12 @@ import asyncio
 import importlib.util
 import os
 import re
+import sys
 from pathlib import Path
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from agentai.core.ports.mcp_port import IMcpClientPort
+
 
 class RealMcpClientAdapter(IMcpClientPort):
     def __init__(self):
@@ -51,7 +53,7 @@ class RealMcpClientAdapter(IMcpClientPort):
 
         # Establish I/O process streaming constraints for the background child server
         server_params = StdioServerParameters(
-            command="python3",
+            command=sys.executable,
             args=[server_script],
             env=os.environ.copy()
         )
@@ -61,15 +63,30 @@ class RealMcpClientAdapter(IMcpClientPort):
             async with stdio_client(server_params) as (read_stream, write_stream):
                 async with ClientSession(read_stream, write_stream) as session:
                     await session.initialize()
-                    
-                    response = await session.call_tool(
-                        route["tool"],
-                        arguments=route["args"](query),
-                    )
-                    
-                    return "".join([content.text for content in response.content if hasattr(content, 'text')])
+
+                    tool_args = route["args"](query)
+                    if not isinstance(tool_args, list):
+                        tool_args = [tool_args]
+
+                    tool_results = []
+                    for args in tool_args:
+                        response = await session.call_tool(
+                            route["tool"],
+                            arguments=args,
+                        )
+                        tool_results.append("".join([
+                            content.text
+                            for content in response.content
+                            if hasattr(content, "text")
+                        ]))
+
+                    return "\n\n---\n\n".join(tool_results)
         except Exception as e:
             return f"Network Protocol Error connecting to {industry} backend module: {str(e)}"
+
+    # ------------------------------------------------------------------ #
+    #  Argument builders                                                   #
+    # ------------------------------------------------------------------ #
 
     def _fintech_args(self, query: str) -> dict:
         return {"account_id": self._extract_fintech_id(query)}
@@ -78,63 +95,104 @@ class RealMcpClientAdapter(IMcpClientPort):
         return {"patient_id": self._extract_healthcare_id(query)}
 
     def _hr_args(self, query: str) -> dict:
-        topic = "remote" if "remote" in query.lower() else "leave"
-        return {"policy_topic": topic}
+        """
+        Extract the correct HR policy topic from the query by matching
+        keywords to known policy keys in MOCK_POLICIES.
+        """
+        query_lower = query.lower().replace("_", " ")
+
+        keyword_map = {
+            "data_privacy":           ["data privacy", "data_privacy", "gdpr", "pii", "data protection", "personal data", "encryption", "consent"],
+            "remote":                 ["remote", "work from home", "wfh", "hybrid"],
+            "whistleblower":          ["whistleblower", "retaliation", "anonymous report", "ethical violation"],
+            "insider_trading":        ["insider", "trading", "blackout", "mnpi", "securities", "stock"],
+            "it_security":            ["it security", "mfa", "vpn", "acceptable use", "asset security", "multi-factor"],
+            "anti_bribery":           ["bribery", "corruption", "gift", "abc policy", "facilitation payment"],
+            "expense_reimbursement":  ["expense", "reimbursement", "travel", "meal", "receipt"],
+            "social_media":           ["social media", "public communication", "posting", "trade secret"],
+            "satyam_consulting_sla":  ["satyam", "sla", "consulting", "contractor", "uptime"],
+            "leave":                  ["leave", "sick", "annual leave", "emergency leave", "maternity", "vacation"],
+        }
+
+        matched_policy_keys = []
+        for policy_key, keywords in keyword_map.items():
+            if any(kw in query_lower for kw in keywords):
+                matched_policy_keys.append(policy_key)
+
+        if matched_policy_keys:
+            return [{"policy_topic": policy_key} for policy_key in matched_policy_keys]
+
+        # Fallback: send the raw query; the server will return available topics
+        return {"policy_topic": query_lower.strip()}
+
+    # ------------------------------------------------------------------ #
+    #  ID extractors                                                       #
+    # ------------------------------------------------------------------ #
 
     def _extract_identifier(self, query: str, default: str, pattern: str) -> str:
         match = re.search(pattern, query.upper())
         return match.group(0) if match else default
 
     def _extract_fintech_id(self, query: str) -> str:
-        """Extract fintech account ID from query, supporting both ID format (ACC-991A) and account holder names."""
-        # First try to match ID pattern
+        """Extract fintech account ID from query, supporting ID format (ACC-991A) and account holder names."""
+        # Try ID pattern first
         match = re.search(r"ACC-[A-Z0-9]+", query.upper())
         if match:
             return match.group(0)
-        
-        # If no ID found, try to match against account holder names from mock data
-        fintech_server_path = Path(__file__).resolve().parents[4] / "backend" / "mcp_servers" / "fintech_server.py"
+
+        # Fallback: match against account holder names from mock data
+        fintech_server_path = (
+            Path(__file__).resolve().parents[5]
+            / "backend" / "mcp_servers" / "fintech_server.py"
+        )
         if fintech_server_path.exists():
             try:
                 spec = importlib.util.spec_from_file_location("fintech_server", fintech_server_path)
                 fintech_module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(fintech_module)
-                
-                # Search for matching account holder name
+
                 query_lower = query.lower()
                 for account_id, account_data in fintech_module.MOCK_LEDGER.items():
                     holder_name = account_data.get("account_holder", "").lower()
-                    if holder_name in query_lower or query_lower in holder_name or holder_name.split()[0] in query_lower:
+                    if (
+                        holder_name in query_lower
+                        or query_lower in holder_name
+                        or holder_name.split()[0] in query_lower
+                    ):
                         return account_id
             except Exception:
                 pass
-        
-        # Return first account as fallback (better than None)
-        return "ACC-991A"
+
+        return "ACC-991A"  # Default fallback
 
     def _extract_healthcare_id(self, query: str) -> str:
-        """Extract healthcare patient ID from query, supporting both ID format (PAT-512E) and patient names."""
-        # First try to match ID pattern
+        """Extract healthcare patient ID from query, supporting ID format (PAT-512E) and patient names."""
+        # Try ID pattern first
         match = re.search(r"PAT-[A-Z0-9]+", query.upper())
         if match:
             return match.group(0)
-        
-        # If no ID found, try to match against patient names from mock data
-        healthcare_server_path = Path(__file__).resolve().parents[4] / "backend" / "mcp_servers" / "healthcare_server.py"
+
+        # Fallback: match against patient names from mock data
+        healthcare_server_path = (
+            Path(__file__).resolve().parents[5]
+            / "backend" / "mcp_servers" / "healthcare_server.py"
+        )
         if healthcare_server_path.exists():
             try:
                 spec = importlib.util.spec_from_file_location("healthcare_server", healthcare_server_path)
                 healthcare_module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(healthcare_module)
-                
-                # Search for matching patient name
+
                 query_lower = query.lower()
                 for patient_id, patient_data in healthcare_module.MOCK_PATIENT_RECORDS.items():
                     patient_name = patient_data.get("patient_name", "").lower()
-                    if patient_name in query_lower or query_lower in patient_name or patient_name.split()[0] in query_lower:
+                    if (
+                        patient_name in query_lower
+                        or query_lower in patient_name
+                        or patient_name.split()[0] in query_lower
+                    ):
                         return patient_id
             except Exception:
                 pass
-        
-        # Return first patient as fallback (better than None)
-        return "PAT-204B"
+
+        return "PAT-204B"  # Default fallback

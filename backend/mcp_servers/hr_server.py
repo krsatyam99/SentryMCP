@@ -71,8 +71,26 @@ def summarize_hr_policy(policy_topic: str) -> str:
     """Summarizes an HR policy and highlights compliance-sensitive notes."""
     print(f"[HR Subprocess] Policy summary request received for: {policy_topic}", file=sys.stderr)
 
-    topic = policy_topic.lower()
+    # Normalize input: lowercase, replace spaces/hyphens with underscores
+    topic = policy_topic.lower().strip()
+    topic = topic.replace(" ", "_").replace("-", "_")
+
+    # Remove common trailing words like "policy", "guidelines", etc.
+    for suffix in ["_policy", "_guidelines", "_guide"]:
+        if topic.endswith(suffix):
+            topic = topic[: -len(suffix)]
+            break
+
+    # Try exact match first
     policy = MOCK_POLICIES.get(topic)
+
+    # Fallback: partial match
+    if not policy:
+        for key in MOCK_POLICIES:
+            if topic in key or key in topic:
+                policy = MOCK_POLICIES[key]
+                break
+
     if not policy:
         available = ", ".join(sorted(MOCK_POLICIES))
         return f"Error: Policy topic '{policy_topic}' was not found. Available topics: {available}."
@@ -83,7 +101,6 @@ def summarize_hr_policy(policy_topic: str) -> str:
         f"Summary: {policy['summary']}\n"
         f"Compliance Note: {policy['risk_note']}"
     )
-
 
 if __name__ == "__main__":
     mcp.run()
