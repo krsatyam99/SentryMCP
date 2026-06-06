@@ -46,16 +46,22 @@ class AnalyzeVoiceUseCase:
         )
 
         # 🎯 OPTIMIZATION FIX: Generate audio ONLY if should_speak is evaluated as True
+        spoken_summary = self._build_spoken_summary(ai_analysis)
         speech_audio_base64 = ""
+        speech_error = ""
         if should_speak and self.audio_client is not None:
             print("[Voice Pipeline] Mic input detected or vocalization forced. Invoking AWS Polly...")
-            speech_bytes = self.audio_client.synthesize_speech(
-                ai_analysis.get("summary", ""),
-                voice_id=getattr(self.audio_client, "polly_voice_id", "Joanna"),
-                output_format=getattr(self.audio_client, "polly_output_format", "mp3"),
-            )
-            if speech_bytes:
-                speech_audio_base64 = b64encode(speech_bytes).decode("utf-8")
+            try:
+                speech_bytes = self.audio_client.synthesize_speech(
+                    spoken_summary,
+                    voice_id=getattr(self.audio_client, "polly_voice_id", "Joanna"),
+                    output_format=getattr(self.audio_client, "polly_output_format", "mp3"),
+                )
+                if speech_bytes:
+                    speech_audio_base64 = b64encode(speech_bytes).decode("utf-8")
+            except Exception as exc:
+                speech_error = str(exc)
+                print(f"[Voice Pipeline] Polly synthesis unavailable: {speech_error}")
         else:
             print("[Voice Pipeline] Text chat detected. Skipping AWS Polly calculation for faster response.")
 
@@ -67,5 +73,12 @@ class AnalyzeVoiceUseCase:
             "subsystem_extracted_logs": raw_mcp_data,
             "audio_transcription": audio_transcription,
             "speech_audio_base64": speech_audio_base64,
+            "spoken_summary": spoken_summary,
+            "speech_error": speech_error,
             "bedrock_evaluation": ai_analysis
         }
+
+    def _build_spoken_summary(self, ai_analysis: dict) -> str:
+        verdict = ai_analysis.get("verdict", "UNKNOWN")
+        summary = ai_analysis.get("summary", "No analysis summary was generated.")
+        return f"Verdict: {verdict}. {summary}"

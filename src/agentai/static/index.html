@@ -3,90 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Multimodal MCP Auditor</title>
+    <title>MCP Compliance Voice Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Custom subtle scrollbar for a polished corporate feel */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-track { background: #f7f9f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans h-screen flex flex-col antialiased">
-
-    <header class="bg-white border-b border-slate-200/80 px-8 py-4 flex items-center justify-between shadow-sm" role="banner">
-        <div class="flex items-center space-x-4">
-            <div class="bg-teal-50 text-teal-600 p-2.5 rounded-xl border border-teal-100 flex items-center justify-center shadow-sm">
-                <i class="fas fa-waveform-lines text-lg"></i>
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between shadow-sm" role="banner">
+        <div class="flex items-center gap-4">
+            <div class="bg-teal-50 text-teal-700 p-3 rounded-lg border border-teal-100 flex items-center justify-center shadow-sm" aria-hidden="true">
+                <i class="fas fa-microphone-lines text-lg"></i>
             </div>
             <div>
                 <h1 class="text-base font-semibold tracking-tight text-slate-900">MCP Compliance Workspace</h1>
-                <p class="text-xs text-slate-500 font-medium">Multimodal Engine • Hands-Free Accessible Fallback Loop</p>
+                <p class="text-xs text-slate-500 font-medium">Hands-free chat, MCP tools, AWS Transcribe, and AWS Polly</p>
             </div>
         </div>
-        
-        <div class="flex items-center space-x-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200/60">
-            <label for="industrySelect" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-2">Active MCP Gateway:</label>
-            <select id="industrySelect" class="border-0 rounded-lg px-3 py-1.5 text-xs font-semibold bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-teal-500 focus:outline-none cursor-pointer transition-all">
-                <option value="fintech">💳 FinTech Subsystem</option>
-                <option value="healthcare">🩺 Healthcare / PHI Portal</option>
-                <option value="hr">⚖️ HR Corporate Policy Ledger</option>
+
+        <div class="flex items-center gap-3 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
+            <label for="industrySelect" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-2">MCP Gateway</label>
+            <select id="industrySelect" class="border-0 rounded-md px-3 py-2 text-xs font-semibold bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                <option value="fintech">FinTech Subsystem</option>
+                <option value="healthcare">Healthcare / PHI Portal</option>
+                <option value="hr">HR Corporate Policy Ledger</option>
             </select>
         </div>
     </header>
 
     <div class="flex-1 flex overflow-hidden">
-        
-        <aside class="w-80 bg-white border-r border-slate-200/80 p-6 flex flex-col justify-between hidden md:flex" role="complementary">
-            <div class="space-y-6">
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Hands-Free Operation</h3>
-                    <button id="recordBtn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl shadow-sm transition-all duration-200 transform active:scale-[0.98] flex items-center justify-center space-x-2.5 group" aria-label="Start Voice Audit Session">
-                        <i id="recordIcon" class="fas fa-microphone text-sm text-teal-400 transition-transform group-hover:scale-105"></i>
-                        <span id="recordText" class="text-sm">Initiate Voice Query</span>
+        <aside class="w-80 bg-white border-r border-slate-200 p-6 hidden md:flex md:flex-col md:justify-between" role="complementary">
+            <div class="space-y-5">
+                <section aria-labelledby="voiceControlsHeading">
+                    <h2 id="voiceControlsHeading" class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Accessible Voice Loop</h2>
+                    <button id="recordBtn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-lg shadow-sm transition active:scale-[0.98] flex items-center justify-center gap-2.5" aria-label="Start continuous voice loop">
+                        <i id="recordIcon" class="fas fa-microphone text-sm text-teal-300" aria-hidden="true"></i>
+                        <span id="recordText" class="text-sm">Start Voice Loop</span>
                     </button>
-                    <div id="recordingStatus" class="text-center text-xs text-teal-600 font-semibold mt-3 hidden animate-pulse bg-teal-50 border border-teal-100 py-2 rounded-xl">
-                        ✨ Listening to audio stream... Speak now
+                    <div id="recordingStatus" class="text-center text-xs text-teal-700 font-semibold mt-3 hidden animate-pulse bg-teal-50 border border-teal-100 py-2 rounded-lg" role="status" aria-live="assertive">
+                        Listening. Speak now.
                     </div>
-                </div>
+                    <label class="mt-3 flex items-center gap-2 text-xs font-semibold text-slate-600">
+                        <input id="continuousVoiceToggle" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" checked>
+                        Keep listening after each spoken answer
+                    </label>
+                </section>
 
-                <div class="border border-slate-100 bg-slate-50/50 rounded-xl p-4 space-y-2.5">
-                    <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Output Parameters</h4>
-                    <div class="flex items-center space-x-2 text-xs text-slate-600">
-                        <span class="relative flex h-2 w-2">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
-                        </span>
-                        <span>Auto-Playback Intercept: <strong class="text-teal-600 font-semibold">ARMED</strong></span>
-                    </div>
-                </div>
+                <section class="border border-slate-100 bg-slate-50 rounded-lg p-4 space-y-2.5" aria-labelledby="voiceStatusHeading">
+                    <h2 id="voiceStatusHeading" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Voice Pipeline</h2>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Spoken requests are routed through MCP and the assistant response is read aloud. If AWS Polly is disabled, the browser voice is used as a fallback.
+                    </p>
+                </section>
             </div>
 
-            <div class="bg-slate-50 border border-slate-200/40 rounded-xl p-4">
-                <h4 class="text-xs font-semibold text-slate-700 mb-1">Accessibility Optimization</h4>
-                <p class="text-xs text-slate-500 leading-relaxed">This workspace auto-vocalizes replies immediately via AWS Polly when the microphone tool is used, allowing visually impaired operators to audit records without manual panel navigation.</p>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <h2 class="text-xs font-semibold text-slate-700 mb-1">Blind-User Flow</h2>
+                <p class="text-xs text-slate-500 leading-relaxed">Press the voice button once, ask a query, hear the verdict, then continue with the next query without navigating the chat panel.</p>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col bg-slate-50/50" role="main">
-            <div id="chatFeed" class="flex-1 overflow-y-auto p-8 space-y-6" aria-live="polite">
-                <div class="flex items-start space-x-4 max-w-3xl">
-                    <div class="bg-teal-600 text-white p-2 rounded-xl shadow-sm flex items-center justify-center text-xs"><i class="fas fa-robot"></i></div>
-                    <div class="bg-white border border-slate-200/60 rounded-2xl px-5 py-3.5 text-sm text-slate-600 shadow-sm leading-relaxed">
-                        Multimodal interface operational. Select your target domain parameter, submit a transaction identifier text request, or trigger the microphone. Voice loop queries are read out loud automatically.
+        <main class="flex-1 flex flex-col bg-slate-50" role="main">
+            <div id="chatFeed" class="flex-1 overflow-y-auto p-5 md:p-8 space-y-5" aria-live="polite">
+                <div class="flex items-start gap-4 max-w-3xl">
+                    <div class="bg-teal-600 text-white p-2 rounded-lg shadow-sm flex items-center justify-center text-xs" aria-hidden="true"><i class="fas fa-robot"></i></div>
+                    <div class="bg-white border border-slate-200 rounded-lg px-5 py-3.5 text-sm text-slate-600 shadow-sm leading-relaxed">
+                        Voice workspace ready. Start the voice loop, speak a request, and the result will be read aloud automatically.
                     </div>
                 </div>
             </div>
 
-            <footer class="bg-white border-t border-slate-200/80 p-5 shadow-sm">
-                <div id="statusBanner" class="max-w-4xl mx-auto mb-3 rounded-xl px-4 py-2.5 text-xs font-medium text-teal-700 bg-teal-50 border border-teal-100 hidden tracking-wide animate-pulse"></div>
-                
-                <form id="chatForm" class="max-w-4xl mx-auto flex items-center space-x-3">
-                    <input type="text" id="userInput" placeholder="Query data parameters dynamically (e.g., 'Audit ACC-991A' or 'Verify PAT-204B')..." class="flex-1 bg-slate-50 border border-slate-200 focus:border-slate-300 focus:bg-white text-slate-800 outline-none rounded-xl px-4 py-3 text-sm transition placeholder-slate-400 font-normal">
-                    <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-3 rounded-xl font-medium shadow-sm transition transform active:scale-95 flex items-center justify-center" aria-label="Send Query">
-                        <i class="fas fa-paper-plane text-xs text-slate-300"></i>
+            <footer class="bg-white border-t border-slate-200 p-5 shadow-sm">
+                <div id="statusBanner" class="max-w-4xl mx-auto mb-3 rounded-lg px-4 py-2.5 text-xs font-medium text-teal-700 bg-teal-50 border border-teal-100 hidden tracking-wide animate-pulse" role="status" aria-live="assertive"></div>
+
+                <form id="chatForm" class="max-w-4xl mx-auto flex items-center gap-3">
+                    <label for="userInput" class="sr-only">Text query</label>
+                    <input type="text" id="userInput" placeholder="Type a query, for example: Audit ACC-991A" class="flex-1 bg-slate-50 border border-slate-200 focus:border-slate-300 focus:bg-white text-slate-800 outline-none rounded-lg px-4 py-3 text-sm transition placeholder-slate-400">
+                    <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-3 rounded-lg font-medium shadow-sm transition active:scale-95 flex items-center justify-center" aria-label="Send text query">
+                        <i class="fas fa-paper-plane text-xs text-slate-300" aria-hidden="true"></i>
                     </button>
                 </form>
             </footer>
@@ -99,32 +97,29 @@
         const userInput = document.getElementById('userInput');
         const industrySelect = document.getElementById('industrySelect');
         const recordBtn = document.getElementById('recordBtn');
-        const recordIcon = document.getElementById('recordIcon');
         const recordText = document.getElementById('recordText');
         const recordingStatus = document.getElementById('recordingStatus');
         const statusBanner = document.getElementById('statusBanner');
+        const continuousVoiceToggle = document.getElementById('continuousVoiceToggle');
 
         let isRecording = false;
+        let voiceLoopActive = false;
+        let isProcessingVoice = false;
         let recognition;
 
-        // Core Hook: Intercepts Base64 audio data and plays aloud instantly (Hands-free)
-        function autoPlayAudio(base64Data) {
-            if (!base64Data) return;
-            try {
-                const audioBlob = b64ToBlob(base64Data, 'audio/mp3');
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const audioPlayer = new Audio(audioUrl);
-                
-                setStatus('🔊 Playing response aloud...');
-                audioPlayer.play();
-                audioPlayer.onended = () => setStatus('');
-            } catch (err) {
-                console.error("Audio AutoPlay intercept failed:", err);
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        function setStatus(text) {
+            if (!text) {
+                statusBanner.classList.add('hidden');
+                statusBanner.innerText = '';
+                return;
             }
+            statusBanner.innerText = text;
+            statusBanner.classList.remove('hidden');
         }
 
-        // Base64 helper array-buffer parsing converter
-        function b64ToBlob(b64Data, contentType='', sliceSize=512) {
+        function b64ToBlob(b64Data, contentType = '', sliceSize = 512) {
             const byteCharacters = atob(b64Data);
             const byteArrays = [];
             for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
@@ -133,47 +128,89 @@
                 for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
                 byteArrays.push(new Uint8Array(byteNumbers));
             }
-            return new Blob(byteArrays, {type: contentType});
+            return new Blob(byteArrays, { type: contentType });
         }
 
-        const setStatus = (text) => {
-            if (!text) {
-                statusBanner.classList.add('hidden');
-                statusBanner.innerText = '';
-                return;
-            }
-            statusBanner.innerText = text;
-            statusBanner.classList.remove('hidden');
-        };
+        function stripHtml(text) {
+            return text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        }
 
-        function appendMessage(sender, text, audioBase64 = null) {
+        function escapeHtml(text) {
+            return String(text || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function appendMessage(sender, text, audioBase64 = null, spokenText = '') {
             const isAI = sender === 'assistant';
             const wrapper = document.createElement('div');
-            wrapper.className = `flex items-start space-x-4 max-w-3xl ${isAI ? '' : 'ml-auto flex-row-reverse space-x-reverse'}`;
-            
-            let audioHTML = '';
-            if (audioBase64) {
-                // Keeps a visual native media player node inside timeline layout for debugging fallback
-                audioHTML = `<audio class="mt-3 h-8 w-full max-w-xs block" controls src="data:audio/mp3;base64,${audioBase64}"></audio>`;
-            }
+            wrapper.className = `flex items-start gap-4 max-w-3xl ${isAI ? '' : 'ml-auto flex-row-reverse'}`;
+
+            const audioHTML = audioBase64
+                ? `<audio class="mt-3 h-8 w-full max-w-xs block" controls src="data:audio/mp3;base64,${audioBase64}"></audio>`
+                : '';
 
             wrapper.innerHTML = `
-                <div class="${isAI ? 'bg-teal-600' : 'bg-slate-700'} text-white p-2 rounded-xl text-xs shadow-sm flex items-center justify-center"><i class="fas ${isAI ? 'fa-robot' : 'fa-user'}"></i></div>
-                <div class="${isAI ? 'bg-white border border-slate-200/80 text-slate-700' : 'bg-slate-800 text-white'} rounded-2xl px-5 py-3.5 shadow-sm text-sm leading-relaxed">
+                <div class="${isAI ? 'bg-teal-600' : 'bg-slate-700'} text-white p-2 rounded-lg text-xs shadow-sm flex items-center justify-center" aria-hidden="true">
+                    <i class="fas ${isAI ? 'fa-robot' : 'fa-user'}"></i>
+                </div>
+                <div class="${isAI ? 'bg-white border border-slate-200 text-slate-700' : 'bg-slate-800 text-white'} rounded-lg px-5 py-3.5 shadow-sm text-sm leading-relaxed">
                     ${text}
                     ${audioHTML}
                 </div>
             `;
             chatFeed.appendChild(wrapper);
             chatFeed.scrollTop = chatFeed.scrollHeight;
-            
-            // Problem 2 Fix: If audio payload string exists, immediately vocalize hands-free
-            if (isAI && audioBase64) {
-                autoPlayAudio(audioBase64);
+
+            if (isAI) {
+                playAssistantAudio(audioBase64, spokenText || stripHtml(text));
             }
         }
 
-        // Central orchestration dispatcher pipeline for hitting FastAPI backend routes
+        function playAssistantAudio(base64Data, fallbackText) {
+            if (!base64Data) {
+                speakWithBrowserFallback(fallbackText);
+                return;
+            }
+
+            try {
+                const audioBlob = b64ToBlob(base64Data, 'audio/mp3');
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audioPlayer = new Audio(audioUrl);
+                setStatus('Playing response aloud.');
+                audioPlayer.onended = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    setStatus('');
+                    restartListeningIfNeeded();
+                };
+                audioPlayer.onerror = () => speakWithBrowserFallback(fallbackText);
+                audioPlayer.play().catch(() => speakWithBrowserFallback(fallbackText));
+            } catch (err) {
+                console.error('Audio playback failed:', err);
+                speakWithBrowserFallback(fallbackText);
+            }
+        }
+
+        function speakWithBrowserFallback(text) {
+            if (!text || !('speechSynthesis' in window)) {
+                restartListeningIfNeeded();
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.95;
+            utterance.onstart = () => setStatus('Polly audio unavailable. Speaking with browser voice.');
+            utterance.onend = () => {
+                setStatus('');
+                restartListeningIfNeeded();
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+
         async function runAnalysisPipeline(endpoint, queryStr) {
             try {
                 const response = await fetch(endpoint, {
@@ -182,82 +219,125 @@
                     body: JSON.stringify({ industry: industrySelect.value, query: queryStr, audio_url: '' })
                 });
                 const payload = await response.json();
-                
-                // Unpack compliance analytical tokens
                 const evalData = payload.bedrock_evaluation || {};
-                const replyText = `<strong>[VERDICT: ${evalData.verdict || 'UNKNOWN'}]</strong> ${evalData.summary || 'No audit summary generated.'}`;
-                
-                appendMessage('assistant', replyText, payload.speech_audio_base64 || null);
+                const verdict = evalData.verdict || 'UNKNOWN';
+                const summary = evalData.summary || 'No audit summary generated.';
+                const providerNote = evalData.provider_note ? `<div class="mt-2 text-xs text-slate-500">Provider: ${escapeHtml(evalData.provider_note)}</div>` : '';
+                const mcpData = payload.subsystem_extracted_logs
+                    ? `<details class="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+                           <summary class="cursor-pointer text-xs font-semibold text-slate-600">MCP server response</summary>
+                           <pre class="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-slate-700">${escapeHtml(payload.subsystem_extracted_logs)}</pre>
+                       </details>`
+                    : '';
+                const replyText = `<strong>[VERDICT: ${escapeHtml(verdict)}]</strong><div class="mt-2 whitespace-pre-wrap">${escapeHtml(summary)}</div>${providerNote}${mcpData}`;
+
+                if (payload.speech_error) {
+                    setStatus(`Polly warning: ${payload.speech_error}`);
+                }
+                appendMessage('assistant', replyText, payload.speech_audio_base64 || null, payload.spoken_summary || `Verdict: ${verdict}. ${summary}`);
             } catch (err) {
-                appendMessage('assistant', '⚠️ System runtime processing error communicating with MCP gateway.');
+                appendMessage('assistant', 'System runtime processing error communicating with MCP gateway.', null, 'System runtime processing error communicating with MCP gateway.');
             } finally {
-                setStatus('');
+                isProcessingVoice = false;
             }
         }
 
-        // Form Submit Handler (Keyboard Text Track Option)
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
             const text = userInput.value.trim();
             if (!text) return;
 
             userInput.value = '';
             appendMessage('user', text);
-            setStatus('Extracting data metrics via target MCP server...');
-            
-            // Calls the rapid text-only processing route (Bypasses Polly calculation)
+            setStatus('Extracting data through the selected MCP server.');
             await runAnalysisPipeline('/analyze', text);
         });
 
-        // Browser Web Speech Ingestion Configuration (Captures true dynamic spoken sentences)
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.continuous = false;
+            recognition.interimResults = false;
             recognition.lang = 'en-US';
 
             recognition.onstart = () => {
+                isRecording = true;
                 recordingStatus.classList.remove('hidden');
-                recordBtn.className = "w-full bg-teal-50 border border-teal-200 text-teal-700 font-medium py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center space-x-2.5";
-                recordText.innerText = "System Listening...";
+                recordBtn.className = 'w-full bg-teal-50 border border-teal-200 text-teal-700 font-medium py-3 px-4 rounded-lg shadow-sm transition flex items-center justify-center gap-2.5';
+                recordText.innerText = 'Listening. Press to stop.';
+                recordBtn.setAttribute('aria-label', 'Stop continuous voice loop');
+                setStatus('Listening. Speak your audit request.');
             };
 
-            recognition.onerror = () => {
-                setStatus('⚠️ Voice access framework timeout.');
+            recognition.onerror = (event) => {
+                setStatus(`Voice input stopped: ${event.error || 'speech recognition error'}.`);
                 stopRecordingUI();
             };
 
-            recognition.onend = () => stopRecordingUI();
+            recognition.onend = () => {
+                isRecording = false;
+                if (!isProcessingVoice) stopRecordingUI();
+            };
 
             recognition.onresult = async (event) => {
-                const liveTranscribedText = event.results.transcript;
-                if (!liveTranscribedText.trim()) return;
+                const liveTranscribedText = Array.from(event.results)
+                    .slice(event.resultIndex)
+                    .map((result) => result[0]?.transcript || '')
+                    .join(' ')
+                    .trim();
 
-                // Outputs exactly what the user said right to the screen
-                appendMessage('user', `🗣️ ${liveTranscribedText}`);
-                setStatus('Routing real-time voice input to execution loop...');
-                
-                // Problem 1 Fix: Calls the audio voice route to explicitly trigger AWS Polly playback 
+                if (!liveTranscribedText) {
+                    restartListeningIfNeeded();
+                    return;
+                }
+
+                isProcessingVoice = true;
+                appendMessage('user', liveTranscribedText);
+                setStatus('Routing voice request through MCP, Bedrock, and Polly.');
                 await runAnalysisPipeline('/voice-analyze', liveTranscribedText);
             };
         } else {
             recordBtn.disabled = true;
-            recordText.innerText = "Speech input unsupported";
+            recordText.innerText = 'Speech input unsupported';
+            setStatus('Browser speech recognition is unavailable. Use the text box or provide an S3 audio URL through the API.');
         }
 
         function stopRecordingUI() {
             isRecording = false;
             recordingStatus.classList.add('hidden');
-            recordBtn.className = "w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center space-x-2.5 group";
-            recordText.innerText = "Initiate Voice Query";
+            recordBtn.className = 'w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-lg shadow-sm transition flex items-center justify-center gap-2.5';
+            recordText.innerText = voiceLoopActive ? 'Stop Voice Loop' : 'Start Voice Loop';
+            recordBtn.setAttribute('aria-label', voiceLoopActive ? 'Stop continuous voice loop' : 'Start continuous voice loop');
+        }
+
+        function startListening() {
+            if (!recognition || isRecording || isProcessingVoice) return;
+            try {
+                recognition.start();
+            } catch (err) {
+                console.warn('Speech recognition start ignored:', err);
+            }
+        }
+
+        function restartListeningIfNeeded() {
+            isProcessingVoice = false;
+            if (!voiceLoopActive || !continuousVoiceToggle.checked) {
+                stopRecordingUI();
+                return;
+            }
+            setStatus('Ready for the next spoken request.');
+            window.setTimeout(startListening, 700);
         }
 
         recordBtn.addEventListener('click', () => {
-            if (!isRecording) {
-                isRecording = true;
-                recognition.start();
+            if (!recognition) return;
+            voiceLoopActive = !voiceLoopActive;
+            if (voiceLoopActive) {
+                startListening();
             } else {
-                recognition.stop();
+                window.speechSynthesis?.cancel();
+                if (isRecording) recognition.stop();
+                stopRecordingUI();
+                setStatus('Voice loop stopped.');
             }
         });
     </script>

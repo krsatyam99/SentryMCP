@@ -15,16 +15,18 @@ setup(
     python_requires=">=3.11",
     install_requires=[
         "fastapi==0.111.1",
-        "uvicorn[standard]==0.23.2",
+        "uvicorn[standard]==0.49.0",
         "boto3==1.43.23",
         "httpx==0.28.1",
+        "mcp==1.27.2",
         "python-dotenv==1.0.0",
-        "pydantic==2.9.0",
+        "pydantic==2.13.4",
+        "starlette==0.37.2",
     ],
     extras_require={
         "dev": [
-            "pytest==8.4.3",
-            "pytest-asyncio==0.23.0",
+            "pytest==8.4.2",
+            "pytest-asyncio==0.24.0",
         ],
     },
     include_package_data=True,
