@@ -10,6 +10,17 @@ class IAudioPort(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def synthesize_speech(self, text: str, voice_id: str = "Joanna", output_format: str = "mp3") -> bytes:
+    def transcribe_audio_bytes(self, audio_bytes: bytes, media_format: str = "webm") -> str:
+        """Upload raw audio to S3 (when configured) and transcribe via Amazon Transcribe."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def synthesize_speech(
+        self,
+        text: str,
+        voice_id: str = "Joanna",
+        output_format: str = "mp3",
+        force: bool = False,
+    ) -> bytes:
         """Synthesize speech from text and return raw audio bytes."""
         raise NotImplementedError

@@ -21,7 +21,7 @@
             </div>
             <div>
                 <h1 class="text-base font-semibold tracking-tight text-slate-900">MCP Compliance Workspace</h1>
-                <p class="text-xs text-slate-500 font-medium">Hands-free chat, MCP tools, AWS Transcribe, and AWS Polly</p>
+                <p class="text-xs text-slate-500 font-medium">Voice-to-voice: browser speech recognition in, Amazon Polly out</p>
             </div>
         </div>
 
@@ -55,8 +55,8 @@
 
                 <section class="border border-slate-100 bg-slate-50 rounded-lg p-4 space-y-2.5" aria-labelledby="voiceStatusHeading">
                     <h2 id="voiceStatusHeading" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Voice Pipeline</h2>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        Spoken requests are routed through MCP and the assistant response is read aloud. If AWS Polly is disabled, the browser voice is used as a fallback.
+                    <p id="voicePipelineHelp" class="text-xs text-slate-600 leading-relaxed">
+                        Checking AWS audio configuration...
                     </p>
                 </section>
             </div>
@@ -106,6 +106,7 @@
         let voiceLoopActive = false;
         let isProcessingVoice = false;
         let recognition;
+        let pollyEnabled = false;
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -180,7 +181,7 @@
                 const audioBlob = b64ToBlob(base64Data, 'audio/mp3');
                 const audioUrl = URL.createObjectURL(audioBlob);
                 const audioPlayer = new Audio(audioUrl);
-                setStatus('Playing response aloud.');
+                setStatus(pollyEnabled ? 'Playing Amazon Polly response.' : 'Playing response aloud.');
                 audioPlayer.onended = () => {
                     URL.revokeObjectURL(audioUrl);
                     setStatus('');
@@ -211,12 +212,12 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        async function runAnalysisPipeline(endpoint, queryStr) {
+        async function runAnalysisPipeline(endpoint, body) {
             try {
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ industry: industrySelect.value, query: queryStr, audio_url: '' })
+                    body: JSON.stringify(body)
                 });
                 const payload = await response.json();
                 const evalData = payload.bedrock_evaluation || {};
@@ -242,6 +243,14 @@
             }
         }
 
+        async function runTextAnalysis(endpoint, queryStr) {
+            await runAnalysisPipeline(endpoint, {
+                industry: industrySelect.value,
+                query: queryStr,
+                audio_url: ''
+            });
+        }
+
         chatForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const text = userInput.value.trim();
@@ -250,8 +259,26 @@
             userInput.value = '';
             appendMessage('user', text);
             setStatus('Extracting data through the selected MCP server.');
-            await runAnalysisPipeline('/analyze', text);
+            await runTextAnalysis('/analyze', text);
         });
+
+        async function loadAudioConfig() {
+            const help = document.getElementById('voicePipelineHelp');
+            try {
+                const response = await fetch('/audio-config');
+                const config = await response.json();
+                pollyEnabled = Boolean(config.polly_enabled);
+                if (pollyEnabled) {
+                    help.textContent = 'Voice-to-voice: browser speech recognition captures your question, then Amazon Polly reads the compliance verdict aloud.';
+                } else {
+                    help.textContent = 'Voice-to-voice uses browser speech recognition. Set POLLY_ENABLED=true in .env so responses use Amazon Polly.';
+                }
+            } catch (err) {
+                help.textContent = 'Voice-to-voice uses browser speech recognition for input.';
+            }
+        }
+
+        loadAudioConfig();
 
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
@@ -292,13 +319,13 @@
 
                 isProcessingVoice = true;
                 appendMessage('user', liveTranscribedText);
-                setStatus('Routing voice request through MCP, Bedrock, and Polly.');
-                await runAnalysisPipeline('/voice-analyze', liveTranscribedText);
+                setStatus('Speech recognized. Analyzing with MCP and Bedrock, then speaking with Amazon Polly.');
+                await runTextAnalysis('/voice-analyze', liveTranscribedText);
             };
         } else {
             recordBtn.disabled = true;
             recordText.innerText = 'Speech input unsupported';
-            setStatus('Browser speech recognition is unavailable. Use the text box or provide an S3 audio URL through the API.');
+            setStatus('Browser speech recognition is unavailable in this browser. Use Chrome or Edge, or type your query.');
         }
 
         function stopRecordingUI() {

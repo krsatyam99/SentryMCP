@@ -14,7 +14,7 @@ The project follows **Clean Architecture** (also called **Hexagonal Architecture
                     ┌─────────────────────────────────┐
                     │         INBOUND ADAPTERS         │
                     │   FastAPI (app.py)               │
-                    │   static/index.html, app_ui.py   │
+                    │   static/index.html              │
                     └───────────────┬─────────────────┘
                                     │ calls
                     ┌───────────────▼─────────────────┐
@@ -50,7 +50,7 @@ Dependencies always point **inward**. The `core` package never imports FastAPI, 
 ### Text Audit (`POST /analyze`)
 
 ```text
-Client (web UI / curl / Streamlit)
+Client (web UI / curl / API)
     → FastAPI app.py
     → AuditRequest(industry, query, audio_url?)
     → AnalyzeVoiceUseCase.analyze(force_vocalization=False)
@@ -162,9 +162,8 @@ The system exposes three ways to interact with the same use case:
 |-----------|----------|-----------|
 | **Built-in Web UI** | `src/agentai/static/index.html` | Browser → FastAPI (`/analyze`, `/voice-analyze`) |
 | **REST API** | `src/agentai/adapters/inbound/api/app.py` | HTTP JSON |
-| **Streamlit UI** | `app_ui.py` (root) | httpx → FastAPI |
 
-All three converge on `AnalyzeVoiceUseCase` — the core workflow is identical regardless of client.
+Both converge on `AnalyzeVoiceUseCase` — the core workflow is identical regardless of client.
 
 ---
 
@@ -186,7 +185,7 @@ This validates orchestration logic without AWS credentials, network calls, or MC
 - Multi-domain MCP routing (FinTech, Healthcare, HR)
 - Clean architecture with swappable adapters
 - Local demo mode (no cloud dependency)
-- Built-in web UI, REST API, optional Streamlit UI
+- Built-in web UI (`index.html`) and REST API
 - Text and voice interaction paths
 - Optional AWS Transcribe + Polly integration
 

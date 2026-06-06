@@ -1,4 +1,3 @@
-import io
 import os
 import time
 import uuid
@@ -36,12 +35,43 @@ class AwsAudioAdapter(IAudioPort):
             region_name=self.region_name,
             config=Config(retries={"total_max_attempts": 2, "mode": "standard"}),
         )
+        self.s3_client = boto3.client(
+            service_name="s3",
+            region_name=self.region_name,
+            config=Config(retries={"total_max_attempts": 2, "mode": "standard"}),
+        )
 
-        self.transcribe_role_arn = os.getenv("TRANSCRIBE_ROLE_ARN", "")
+        self.transcribe_role_arn = os.getenv("TRANSCRIBE_ROLE_ARN", "").strip()
+        self.audio_s3_bucket = os.getenv("AUDIO_S3_BUCKET", "").strip()
+        self.audio_s3_prefix = os.getenv("AUDIO_S3_PREFIX", "agentai/uploads").strip().rstrip("/")
         self.language_code = os.getenv("TRANSCRIBE_LANGUAGE_CODE", "en-US")
         self.polly_voice_id = os.getenv("POLLY_VOICE_ID", "Joanna")
         self.polly_output_format = os.getenv("POLLY_OUTPUT_FORMAT", "mp3")
         self.polly_enabled = os.getenv("POLLY_ENABLED", "false").lower() == "true"
+
+    def is_transcribe_configured(self) -> bool:
+        return bool(self.transcribe_role_arn and self.audio_s3_bucket)
+
+    def is_polly_configured(self) -> bool:
+        return self.polly_enabled
+
+    def transcribe_audio_bytes(self, audio_bytes: bytes, media_format: str = "webm") -> str:
+        if not audio_bytes:
+            return ""
+
+        if not self.audio_s3_bucket:
+            return "AUDIO_S3_BUCKET is not configured, so microphone upload transcription is disabled."
+
+        if not self.transcribe_role_arn:
+            return "TRANSCRIBE_ROLE_ARN is not configured, so audio transcription is disabled."
+
+        try:
+            audio_uri = self._upload_audio_bytes(audio_bytes, media_format)
+        except ClientError as exc:
+            message = exc.response.get("Error", {}).get("Message", str(exc))
+            return f"Failed to upload audio to S3: {message}"
+
+        return self.transcribe_audio(audio_uri)
 
     def transcribe_audio(self, audio_uri: str) -> str:
         if not audio_uri:
@@ -66,18 +96,18 @@ class AwsAudioAdapter(IAudioPort):
             "MediaFormat": media_format,
             "Media": {"MediaFileUri": audio_uri},
             "Settings": {"ShowSpeakerLabels": False},
-        }
-        if self.transcribe_role_arn:
-            start_params["JobExecutionSettings"] = {
+            "JobExecutionSettings": {
                 "DataAccessRoleArn": self.transcribe_role_arn
-            }
+            },
+        }
 
         try:
             self.transcribe_client.start_transcription_job(**start_params)
         except ClientError as exc:
             return f"Failed to start transcription job: {exc.response.get('Error', {}).get('Message', str(exc))}"
 
-        for _ in range(30):
+        job = {}
+        for _ in range(45):
             try:
                 job = self.transcribe_client.get_transcription_job(
                     TranscriptionJobName=job_name
@@ -107,8 +137,14 @@ class AwsAudioAdapter(IAudioPort):
         except Exception as exc:
             return f"Failed to retrieve transcription result: {str(exc)}"
 
-    def synthesize_speech(self, text: str, voice_id: str = "Joanna", output_format: str = "mp3") -> bytes:
-        if not self.polly_enabled:
+    def synthesize_speech(
+        self,
+        text: str,
+        voice_id: str = "Joanna",
+        output_format: str = "mp3",
+        force: bool = False,
+    ) -> bytes:
+        if not self.polly_enabled and not force:
             return b""
 
         try:
@@ -126,8 +162,38 @@ class AwsAudioAdapter(IAudioPort):
                 f"Polly synthesis failed: {exc.response.get('Error', {}).get('Message', str(exc))}"
             ) from exc
 
+    def _upload_audio_bytes(self, audio_bytes: bytes, media_format: str) -> str:
+        extension = self._normalize_media_format(media_format)
+        object_key = f"{self.audio_s3_prefix}/{uuid.uuid4().hex}.{extension}"
+        content_type = self._content_type_for_format(extension)
+
+        self.s3_client.put_object(
+            Bucket=self.audio_s3_bucket,
+            Key=object_key,
+            Body=audio_bytes,
+            ContentType=content_type,
+        )
+        return f"s3://{self.audio_s3_bucket}/{object_key}"
+
+    def _normalize_media_format(self, media_format: str) -> str:
+        normalized = (media_format or "webm").lower().lstrip(".")
+        if normalized in {"mp3", "mp4", "wav", "flac", "ogg", "webm", "aac", "m4a"}:
+            return normalized
+        return "webm"
+
+    def _content_type_for_format(self, media_format: str) -> str:
+        mapping = {
+            "webm": "audio/webm",
+            "wav": "audio/wav",
+            "mp3": "audio/mpeg",
+            "mp4": "audio/mp4",
+            "m4a": "audio/mp4",
+            "ogg": "audio/ogg",
+            "flac": "audio/flac",
+            "aac": "audio/aac",
+        }
+        return mapping.get(media_format, "application/octet-stream")
+
     def _infer_media_format(self, audio_uri: str) -> str:
         extension = audio_uri.split(".")[-1].lower()
-        if extension in {"mp3", "mp4", "wav", "flac", "ogg", "webm", "aac", "m4a"}:
-            return extension
-        return "wav"
+        return self._normalize_media_format(extension)

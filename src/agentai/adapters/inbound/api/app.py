@@ -47,6 +47,19 @@ def analyze_voice_to_voice(payload: AuditRequest):
     result = _build_use_case().analyze(payload, force_vocalization=True)
     return result
 
+
+@app.get("/audio-config")
+def audio_config():
+    """Expose which AWS audio services are configured for the web UI."""
+    polly_on = audio_driver.is_polly_configured()
+    return {
+        "voice_mode": "recognition_polly" if polly_on else "recognition_browser_tts",
+        "polly_enabled": polly_on,
+        "speech_input": "browser_recognition",
+        "transcribe_enabled": audio_driver.is_transcribe_configured(),
+    }
+
+
 @app.get("/")
 def root():
     index_file = STATIC_DIR / "index.html"
