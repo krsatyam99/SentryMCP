@@ -15,7 +15,7 @@
 | **Domains** | FinTech · Healthcare · HR |
 | **Pattern** | Clean / Hexagonal architecture (ports & adapters) |
 
-> 🎬 **Demo:** *(Add GIF here — screen record the voice-to-verdict flow)*
+> 🎬 **Demo:** *(docs/images/lld-text-analyze.png)*
 
 ---
 
