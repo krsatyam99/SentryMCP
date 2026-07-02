@@ -17,7 +17,7 @@
 
 > 🎬 **Demo:**
 > 
-> ![SentryMCP Demo Dashboard](docs/images/screenshot_demo.png)
+> ![SentryMCP Demo Dashboard](docs/images/screenshot(4).png)
 ---
 
 ## Table of Contents
