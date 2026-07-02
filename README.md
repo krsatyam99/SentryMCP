@@ -15,7 +15,8 @@
 | **Domains** | FinTech · Healthcare · HR |
 | **Pattern** | Clean / Hexagonal architecture (ports & adapters) |
 
-> 🎬 **Demo:** ![SentryMCP Demo](docs/images/Screenshot%20(4).png)
+> 🎬 **Demo video:**  https://www.linkedin.com/posts/kumar-satyam-769340243_mcp-fintech-healthcare-ugcPost-7478378150473785344-ezep/?utm_source=share&utm_medium=member_desktop&rcm=ACoAADxiXEEB3b8VLFaFrLLT4vVwthY45JuAv5A
+![SentryMCP Demo](docs/images/Screenshot%20(4).png)
 ---
 
 ## Table of Contents
