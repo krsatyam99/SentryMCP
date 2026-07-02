@@ -15,8 +15,9 @@
 | **Domains** | FinTech · Healthcare · HR |
 | **Pattern** | Clean / Hexagonal architecture (ports & adapters) |
 
-> 🎬 **Demo:** *(docs/images/lld-text-analyze.png)*
-
+> 🎬 **Demo:**
+> 
+> ![SentryMCP Demo Dashboard](docs/images/screenshot_demo.png)
 ---
 
 ## Table of Contents
